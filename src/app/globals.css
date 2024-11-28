@@ -1,0 +1,205 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background-start: #AED2FD;
+  --background-end: #4D3589;
+  --glow-color: #6C22BD;
+  --card-bg: rgba(26, 22, 68, 0.2);
+}
+
+body {
+  background: linear-gradient(to bottom right, var(--background-start) 0%, var(--background-end) 46%) bottom right / 50% 50% no-repeat,
+              linear-gradient(to bottom left, var(--background-start) 0%, var(--background-end) 46%) bottom left / 50% 50% no-repeat,
+              linear-gradient(to top left, var(--background-start) 0%, var(--background-end) 46%) top left / 50% 50% no-repeat,
+              linear-gradient(to top right, var(--background-start) 0%, var(--background-end) 46%) top right / 50% 50% no-repeat;
+  min-height: 100vh;
+  color: white;
+}
+
+
+/* 添加到现有的 globals.css 中 */
+
+/* Header特定样式 */
+.header-gradient {
+  background: linear-gradient(
+    90deg,
+    rgba(77, 53, 137, 0.8) 0%,
+    rgba(45, 24, 87, 0.8) 100%
+  );
+}
+
+/* 导航链接悬浮效果 */
+.nav-link {
+  position: relative;
+}
+
+.nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background: white;
+  transition: width 0.3s ease;
+}
+
+.nav-link:hover::after {
+  width: 100%;
+}
+
+/* 玻璃态效果优化 */
+.glass-effect {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* 玻璃态效果 */
+.glass-card {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+}
+
+/* 紫色光晕效果 */
+.glow-effect {
+  position: relative;
+}
+
+.glow-effect::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, var(--glow-color) 0%, transparent 70%);
+  opacity: 0.2;
+  pointer-events: none;
+}
+
+/* 股票卡片样式 */
+.stock-card {
+  background: var(--card-bg);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* 自定义滚动条 */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* 动画效果 */
+@keyframes glow {
+  0% {
+    opacity: 0.2;
+  }
+  50% {
+    opacity: 0.4;
+  }
+  100% {
+    opacity: 0.2;
+  }
+}
+
+.animate-glow {
+  animation: glow 3s ease-in-out infinite;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  body {
+    background-size: 100% 50%;
+  }
+}
+
+/* 为文字添加微弱发光效果 */
+.text-glow {
+  text-shadow: 0 0 10px rgba(174, 210, 253, 0.3);
+}
+
+/* 渐变文字效果 */
+.gradient-text {
+  background: linear-gradient(90deg, #AED2FD 0%, #4D3589 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* 边框发光效果 */
+.border-glow {
+  box-shadow: 0 0 10px rgba(108, 34, 189, 0.3);
+}
+
+@layer utilities {
+  .styled-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(59, 130, 246, 0.3) rgba(59, 130, 246, 0.1);
+  }
+
+  .styled-scrollbar::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .styled-scrollbar::-webkit-scrollbar-track {
+    background: rgba(59, 130, 246, 0.1);
+    border-radius: 2px;
+  }
+
+  .styled-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(59, 130, 246, 0.3);
+    border-radius: 2px;
+  }
+
+  .styled-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(59, 130, 246, 0.5);
+  }
+}
+
+@media (max-width: 768px) {
+  body {
+    background: linear-gradient(
+          to bottom right,
+          var(--background-start) 0%,
+          var(--background-end) 46%
+        )
+        bottom right / 100% 100% no-repeat,
+      linear-gradient(
+          to bottom left,
+          var(--background-start) 0%,
+          var(--background-end) 46%
+        )
+        bottom left / 100% 100% no-repeat,
+      linear-gradient(
+          to top left,
+          var(--background-start) 0%,
+          var(--background-end) 46%
+        )
+        top left / 100% 100% no-repeat,
+      linear-gradient(
+          to top right,
+          var(--background-start) 0%,
+          var(--background-end) 46%
+        )
+        top right / 100% 100% no-repeat;
+  }
+}
+
+@import url('https://fonts.googleapis.com/css2?family=Marcellus&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+HK:wght@400;600&display=swap');
