@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Client } from "@langchain/langgraph-sdk"
 import { CharacterModel } from "@/components/r3f/gltfjsx/character"
@@ -105,7 +105,7 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="flex min-h-screen h-screen overflow-hidden bg-gradient-to-br from-[#AED2FD] to-[#4D3589]">
+    <div className="flex flex-col min-h-screen h-screen overflow-hidden bg-gradient-to-br from-[#AED2FD] to-[#4D3589]">
      {/* 返回主页按钮 - 使用 Link 组件 */}
      <Link 
                 href="/"
@@ -131,8 +131,8 @@ export default function ChatPage() {
                 <span>返回主頁</span>
             </Link>
           
-         {/* 左侧虚拟人区域 - 改用 left 定位 */}
-      <div className="absolute left-[-25%] bottom-20 h-[80%] w-[300px]">
+         {/* 虚拟人区域  */}
+      <div className="absolute left-[18%] bottom-20 h-[80%] w-[300px] overflow-hidden ">
         <ThreeController
           character={<CharacterModel />}
           cameraDebug={false}
