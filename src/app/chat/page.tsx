@@ -2,7 +2,10 @@
 
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { v4 as uuidv4 } from 'uuid'
+import { Client } from "@langchain/langgraph-sdk"
+import { CharacterModel } from "@/components/r3f/gltfjsx/character"
+import { ThreeController } from "@/components/r3f/components/three-controller"
+import Link from 'next/link'
 
 interface Message {
   role: 'user' | 'assistant'
@@ -14,101 +17,79 @@ export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const [threadId, setThreadId] = useState('')
-
-  useEffect(() => {
-    setThreadId(uuidv4())
-  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!input.trim()) return
 
-    const messageId = Math.random().toString()
     const userMessage: Message = {
       role: 'user',
-      content: input.trim(),
-      id: messageId
+      content: input.trim()
     }
     setMessages(prev => [...prev, userMessage])
     setInput('')
     setIsLoading(true)
 
     try {
-      const apiUrl = `https://stockgptv3-5f4e890e7dbd5e88bd4c966df49e7069.default.us.langgraph.app/threads/6a40c452-33ac-4c71-bdd0-a7f9fec15002/runs/stream`
-      
-      const payload = {
-        assistant_id: "eb6db400-e3c8-5d06-a834-015cb89efe69",
-        config: {
-          configurable: {
-            model_name: "openai_gpt_4o"
-          },
-          tags: ["model:openai_gpt_4o"]
-        },
-        input: {
-          messages: [{
-            id: messageId,
-            content: userMessage.content,
-            type: "human"
-          }]
-        },
-        stream_mode: ["messages", "values"]
+      const apiUrl = process.env.NEXT_PUBLIC_CHATBOT_VENUS_URL
+      const apiKey = process.env.NEXT_PUBLIC_API_TOKEN
+
+      if (!apiUrl || !apiKey) {
+        throw new Error("Chatbot API Key or URL Missing.")
       }
 
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': '*/*',
-          'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6,zh-TW;q=0.5',
-          'X-Api-Key': process.env.NEXT_PUBLIC_API_TOKEN || '',
-          'Cache-Control': 'no-store',
-          'Sec-Fetch-Dest': 'empty',
-          'Sec-Fetch-Mode': 'cors',
-          'Sec-Fetch-Site': 'cross-site',
-        },
-        body: JSON.stringify(payload)
+      const client = new Client({
+        apiUrl: apiUrl,
+        apiKey: apiKey,
+        timeoutMs: 30000,
       })
 
-      if (!response.ok) {
-        const errorText = await response.text()
-        console.error('Error response:', errorText)
-        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`)
-      }
+      // 获取助手列表
+      const assistants = await client.assistants.search({
+        metadata: null,
+        offset: 0,
+        limit: 10,
+      })
 
-      const reader = response.body?.getReader()
-      let assistantMessage = ''
+      // 使用第一个助手
+      const agent = assistants[0]
 
-      if (reader) {
-        try {
-          while (true) {
-            const { done, value } = await reader.read()
-            if (done) break
+      // 创建新的对话线程
+      const thread = await client.threads.create()
 
-            const text = new TextDecoder().decode(value)
-            assistantMessage += text
+      // 开始流式响应
+      const streamResponse = client.runs.stream(
+        thread["thread_id"],
+        agent["assistant_id"],
+        {
+          input: { 
+            messages: [{ role: "human", content: input.trim() }] 
+          },
+        }
+      )
 
+      // 处理流式响应
+      for await (const chunk of streamResponse) {
+        if (chunk.event === "values") {
+          if (chunk.data.messages.length > 1 && chunk.data.messages[1].type === "ai") {
+            const answer = chunk.data.messages[1].content
+            
             setMessages(prev => {
               const newMessages = [...prev]
               const lastMessage = newMessages[newMessages.length - 1]
               
               if (lastMessage && lastMessage.role === 'assistant') {
-                lastMessage.content = assistantMessage
+                lastMessage.content = answer
               } else {
                 newMessages.push({
                   role: 'assistant',
-                  content: assistantMessage
+                  content: answer
                 })
               }
               
               return [...newMessages]
             })
           }
-        } catch (readError) {
-          console.error('Error reading stream:', readError)
-          throw new Error(readError instanceof Error ? readError.message : 'Error reading stream')
-        } finally {
-          reader.releaseLock()
         }
       }
 
@@ -123,65 +104,143 @@ export default function ChatPage() {
     }
   }
 
-  // JSX 部分保持不变...
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-4xl mx-auto p-4">
-        <div className="bg-white rounded-lg shadow-xl min-h-[600px] flex flex-col">
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
-            {messages.map((message, index) => (
+    <div className="flex min-h-screen h-screen overflow-hidden bg-gradient-to-br from-[#AED2FD] to-[#4D3589]">
+     {/* 返回主页按钮 - 使用 Link 组件 */}
+     <Link 
+                href="/"
+                className="absolute top-6 left-6 px-4 py-2 
+                         bg-gradient-to-r from-[#AED2FD] to-[#4D3589]
+                         rounded-lg text-white font-semibold
+                         hover:opacity-90 transition-all duration-300
+                         flex items-center space-x-2
+                         backdrop-blur-sm border border-[rgba(255,255,255,0.1)]"
+            >
+                <svg 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    className="h-5 w-5" 
+                    viewBox="0 0 20 20" 
+                    fill="currentColor"
+                >
+                    <path 
+                        fillRule="evenodd" 
+                        d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" 
+                        clipRule="evenodd" 
+                    />
+                </svg>
+                <span>返回主頁</span>
+            </Link>
+          
+         {/* 左侧虚拟人区域 - 改用 left 定位 */}
+      <div className="absolute left-[-25%] bottom-20 h-[80%] w-[300px]">
+        <ThreeController
+          character={<CharacterModel />}
+          cameraDebug={false}
+          stats={false}
+        />
+      </div>
+      {/* 主聊天区域 */}
+      <div className="flex-1 flex flex-col h-full">
+        {/* 消息列表区域 */}
+        <div className="flex-1 overflow-y-auto styled-scrollbar">
+          <div className="max-w-3xl mx-auto px-4 py-6">
+            {/* 欢迎消息 */}
+            {messages.length === 0 && (
               <motion.div
-                key={index}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                className="text-center my-12"
               >
-                <div
-                  className={`max-w-[80%] rounded-lg p-4 ${
-                    message.role === 'user'
-                      ? 'bg-blue-500 text-white'
-                      : 'bg-gray-100 text-gray-800'
-                  }`}
-                >
-                  {message.content}
-                </div>
-              </motion.div>
-            ))}
-            {isLoading && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="flex justify-start"
-              >
-                <div className="bg-gray-100 rounded-lg p-4">
-                  <div className="flex space-x-2">
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }} />
-                  </div>
-                </div>
+                <h1 className="text-4xl font-marcellus text-glow mb-4">
+                  智富匯AI助手
+                </h1>
+                <p className="text-[rgba(255,255,255,0.8)]">
+                  您的專業金融咨詢夥伴
+                </p>
               </motion.div>
             )}
-          </div>
 
-          <form onSubmit={handleSubmit} className="border-t p-4">
-            <div className="flex space-x-4">
+            {/* 聊天消息 */}
+            <div className="space-y-6">
+              {messages.map((message, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                >
+                  <div
+                    className={`max-w-[85%] rounded-2xl p-4 ${
+                      message.role === 'user'
+                        ? 'glass-effect bg-opacity-20 text-white'
+                        : 'glass-card text-white'
+                    }`}
+                  >
+                    <p className="text-base font-noto leading-relaxed">
+                      {message.content}
+                    </p>
+                  </div>
+                </motion.div>
+              ))}
+
+              {/* 加载动画 */}
+              {isLoading && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="flex justify-start"
+                >
+                  <div className="glass-card rounded-2xl p-4">
+                    <div className="flex space-x-2">
+                      {[0, 0.2, 0.4].map((delay, i) => (
+                        <div
+                          key={i}
+                          className="w-2 h-2 bg-[#AED2FD] rounded-full animate-bounce"
+                          style={{ animationDelay: `${delay}s` }}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* 输入区域 */}
+        <div className="border-t border-[rgba(255,255,255,0.1)] bg-[rgba(0,0,0,0.1)]">
+          <div className="max-w-3xl mx-auto px-4 py-4">
+            <form onSubmit={handleSubmit} className="relative">
               <input
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="输入消息..."
-                className="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="輸入您的問題..."
+                className="w-full px-6 py-4 rounded-xl bg-[rgba(255,255,255,0.05)] 
+                         border border-[rgba(255,255,255,0.1)] text-white 
+                         placeholder-gray-400 focus:outline-none focus:ring-2 
+                         focus:ring-[#6C22BD] transition-all duration-300
+                         pr-24"
               />
               <button
                 type="submit"
                 disabled={isLoading || !input.trim()}
-                className="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition-colors disabled:bg-blue-300"
+                className="absolute right-2 top-1/2 -translate-y-1/2
+                         px-4 py-2 rounded-lg bg-gradient-to-r 
+                         from-[#AED2FD] to-[#4D3589] text-white 
+                         font-semibold hover:opacity-90 transition-all 
+                         duration-300 disabled:opacity-50 
+                         disabled:cursor-not-allowed"
               >
-                发送
+                發送
               </button>
-            </div>
-          </form>
+            </form>
+            
+            {/* 底部提示文字 */}
+            <p className="text-center mt-3 text-sm text-[rgba(255,255,255,0.5)]">
+              AI助手會盡力提供准確的信息，但建議您進行適當的驗證
+            </p>
+          </div>
         </div>
       </div>
     </div>

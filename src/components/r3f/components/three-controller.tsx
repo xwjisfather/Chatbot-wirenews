@@ -18,7 +18,7 @@ export function ThreeController(props: ThreeControllerProps) {
 
     return (
         <div className='canvas-container'>
-            <Canvas style={{ background: 'white' }} gl={{ alpha: false }} shadows={true}>
+            <Canvas gl={{ alpha: true }} shadows={true}>
                 <Environment path='assets/' files={'night.hdr'} />
                 {/* <Stage adjustCamera={false} environment={null} intensity={0.8}> */}
                 {props.character}

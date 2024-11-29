@@ -65,7 +65,7 @@ export function CharacterModel(props: JSX.IntrinsicElements['group']) {
     return (
         <group ref={group} {...props} dispose={null}>
             <group name="Scene">
-                <group name="Idle02_1211" scale={0.01}>
+                <group name="Idle02_1211" scale={0.015}>
                     <primitive object={nodes.CC_Base_BoneRoot} />
                 </group>
                 <PerspectiveCamera name="PerspectiveCamera" makeDefault={false} fov={24} position={[0, 1.397, 3.192]} />
